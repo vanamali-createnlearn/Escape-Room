@@ -1,0 +1,14 @@
+--paste under NPC rig
+local npc = script.Parent
+local humanoid = npc:FindFirstChildOfClass("Humanoid")
+local hrp = npc:FindFirstChild("HumanoidRootPart")
+
+-- CONFIGURATION
+local targetUsernames = { "vanamali_sedimbi", "AnotherPlayer" } -- usernames to follow
+local safeDistance = 2    -- how close NPC can get before stopping
+local followSpeed = 8     -- NPC movement speed
+local rigType = "R15"     -- "R15" or "R6"
+
+-- Require and start following
+local NPCFollowModule = require(game.ReplicatedStorage:WaitForChild("NPCFollowModule"))
+NPCFollowModule.StartFollow(npc, humanoid, hrp, targetUsernames, safeDistance, followSpeed, rigType)
