@@ -1,4 +1,5 @@
 -- NPCFollowModule
+--place under ReplicatedStorage
 local NPCFollowModule = {}
 
 function NPCFollowModule.StartFollow(npc, humanoid, hrp, targetUsernames, safeDistance, followSpeed, rigType)
