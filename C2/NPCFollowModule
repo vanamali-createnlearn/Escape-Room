@@ -1,0 +1,96 @@
+-- NPCFollowModule
+local NPCFollowModule = {}
+
+function NPCFollowModule.StartFollow(npc, humanoid, hrp, targetUsernames, safeDistance, followSpeed, rigType)
+	local Players = game:GetService("Players")
+	local RunService = game:GetService("RunService")
+
+	-- Apply speed
+	if humanoid then
+		humanoid.WalkSpeed = followSpeed
+	end
+
+	-- Default walk animation IDs
+	local walkAnimId
+	if rigType == "R15" then
+		walkAnimId = "rbxassetid://913402848" -- Default R15 walk
+	else
+		walkAnimId = "rbxassetid://180426354" -- Default R6 walk
+	end
+
+	-- Animation setup
+	local animator = humanoid and humanoid:FindFirstChildOfClass("Animator")
+	local walkAnimTrack
+
+	if animator then
+		local walkAnim = Instance.new("Animation")
+		walkAnim.AnimationId = walkAnimId
+		walkAnimTrack = animator:LoadAnimation(walkAnim)
+	end
+
+	local function playWalkAnim()
+		if walkAnimTrack and not walkAnimTrack.IsPlaying then
+			walkAnimTrack:Play()
+		end
+	end
+
+	local function stopWalkAnim()
+		if walkAnimTrack and walkAnimTrack.IsPlaying then
+			walkAnimTrack:Stop()
+		end
+	end
+
+	-- Helper: check if username is in list
+	local function isTargetUsername(username)
+		for _, name in ipairs(targetUsernames) do
+			if username == name then
+				return true
+			end
+		end
+		return false
+	end
+
+	-- Helper: get closest player
+	local function getClosestTarget()
+		local closestPlayer, closestDistance = nil, math.huge
+		for _, player in ipairs(Players:GetPlayers()) do
+			if isTargetUsername(player.Name) then
+				local character = player.Character
+				local targetHRP = character and character:FindFirstChild("HumanoidRootPart")
+				if targetHRP then
+					local dist = (hrp.Position - targetHRP.Position).Magnitude
+					if dist < closestDistance then
+						closestDistance = dist
+						closestPlayer = player
+					end
+				end
+			end
+		end
+		return closestPlayer
+	end
+
+	-- Update loop
+	RunService.Heartbeat:Connect(function()
+		local targetPlayer = getClosestTarget()
+
+		if targetPlayer then
+			local targetHRP = targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+			if targetHRP then
+				local distance = (hrp.Position - targetHRP.Position).Magnitude
+				if distance > safeDistance then
+					playWalkAnim()
+					humanoid:MoveTo(targetHRP.Position - (targetHRP.CFrame.LookVector * safeDistance))
+				else
+					stopWalkAnim()
+					humanoid:MoveTo(hrp.Position)
+				end
+			else
+				stopWalkAnim()
+			end
+		else
+			stopWalkAnim()
+		end
+	end)
+end
+
+return NPCFollowModule
