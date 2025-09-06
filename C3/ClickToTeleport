@@ -1,0 +1,16 @@
+--paste this script in the object (like a key) which when clicked must teleport the player
+--make sure that the object has a clickdetector in it
+
+
+local clickDetector = script.Parent:WaitForChild("ClickDetector")
+
+-- Change this to your target teleport location
+local teleportCFrame = CFrame.new(Vector3.new(20, 0.856, 14)) -- Example position
+
+clickDetector.MouseClick:Connect(function(player)
+	local character = player.Character
+	if character and character:FindFirstChild("HumanoidRootPart") then
+		wait(2)
+		character:MoveTo(teleportCFrame.Position)
+	end
+end)
