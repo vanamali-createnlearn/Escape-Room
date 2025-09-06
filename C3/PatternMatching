@@ -1,8 +1,3 @@
---add three blocks, Block1, Block2, and Block3 and then another Block called "Siren"
---add click detectors to each blocks 1,2 and 3.
---Set siren colour to green
---in CorrectOrder table, type the correct order in which they are to be clicked to teleport the player
---Change the destination to the destination of the next room
 local teleportCFrame = CFrame.new(Vector3.new(9, 1.1, 53)) -- destination
 
 -- Correct order
@@ -47,6 +42,13 @@ local function onBlockClicked(player, blockName)
 		local char = player.Character
 		if char and char:FindFirstChild("HumanoidRootPart") then
 			char:MoveTo(teleportCFrame.Position)
+
+			-- Teleport Rig as well
+			local rig = workspace:FindFirstChild("Rig")
+			if rig and rig:FindFirstChild("HumanoidRootPart") then
+				rig:MoveTo(teleportCFrame.Position + Vector3.new(3, 0, 0)) 
+				-- offset so Rig doesn’t overlap player
+			end
 		end
 		playerClickSequences[player] = {} -- reset after success
 	end
