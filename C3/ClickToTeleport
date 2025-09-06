@@ -9,8 +9,17 @@ local teleportCFrame = CFrame.new(Vector3.new(20, 0.856, 14)) -- Example positio
 
 clickDetector.MouseClick:Connect(function(player)
 	local character = player.Character
+	local rig = workspace:FindFirstChild("Rig") -- NPC named Rig
+
 	if character and character:FindFirstChild("HumanoidRootPart") then
 		wait(2)
+		-- Teleport player
 		character:MoveTo(teleportCFrame.Position)
+
+		-- Teleport Rig if it exists and has a HumanoidRootPart
+		if rig and rig:FindFirstChild("HumanoidRootPart") then
+			rig:MoveTo(teleportCFrame.Position + Vector3.new(3, 0, 0)) 
+			-- ^ Offset by 3 studs so NPC doesn’t overlap the player
+		end
 	end
 end)
