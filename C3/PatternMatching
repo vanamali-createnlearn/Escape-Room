@@ -1,0 +1,67 @@
+--add three blocks, Block1, Block2, and Block3 and then another Block called "Siren"
+--add click detectors to each blocks 1,2 and 3.
+--Set siren colour to green
+--in CorrectOrder table, type the correct order in which they are to be clicked to teleport the player
+--Change the destination to the destination of the next room
+local teleportCFrame = CFrame.new(Vector3.new(9, 1.1, 53)) -- destination
+
+-- Correct order
+local correctOrder = { "Block3", "Block1", "Block2" }
+
+-- Track click sequences per player
+local playerClickSequences = {}
+
+-- Reference to siren part
+local siren = workspace:WaitForChild("Siren")
+local defaultColor = BrickColor.new("Lime green")
+local errorColor = BrickColor.new("Bright red")
+
+-- Flash siren red for 2 seconds
+local function flashSiren()
+	siren.BrickColor = errorColor
+	task.delay(2, function()
+		siren.BrickColor = defaultColor
+	end)
+end
+
+-- Handle block click
+local function onBlockClicked(player, blockName)
+	if not playerClickSequences[player] then
+		playerClickSequences[player] = {}
+	end
+
+	local sequence = playerClickSequences[player]
+	table.insert(sequence, blockName)
+
+	-- Check correctness so far
+	for i = 1, #sequence do
+		if sequence[i] ~= correctOrder[i] then
+			playerClickSequences[player] = {} -- reset on wrong
+			flashSiren()
+			return
+		end
+	end
+
+	-- Check full match
+	if #sequence == #correctOrder then
+		local char = player.Character
+		if char and char:FindFirstChild("HumanoidRootPart") then
+			char:MoveTo(teleportCFrame.Position)
+		end
+		playerClickSequences[player] = {} -- reset after success
+	end
+end
+
+-- Connect all blocks
+local function setupClickDetector(partName)
+	local part = workspace:WaitForChild(partName)
+	local clickDetector = part:WaitForChild("ClickDetector")
+
+	clickDetector.MouseClick:Connect(function(player)
+		onBlockClicked(player, partName)
+	end)
+end
+
+setupClickDetector("Block1")
+setupClickDetector("Block2")
+setupClickDetector("Block3")
