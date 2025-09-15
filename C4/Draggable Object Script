@@ -1,0 +1,97 @@
+-- LocalScript in StarterPlayerScripts
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local dragging = false
+local dragInstance = nil -- whole model or part
+local dragOffset = CFrame.new()
+local dragPlaneY = 0
+
+-- Get root part for offset math
+local function getRoot(instance)
+	if instance:IsA("Model") then
+		if instance.PrimaryPart then return instance.PrimaryPart end
+		for _,v in ipairs(instance:GetDescendants()) do
+			if v:IsA("BasePart") then return v end
+		end
+	elseif instance:IsA("BasePart") then
+		return instance
+	end
+	return nil
+end
+
+-- Find ClickDetector up the ancestry
+local function findClickDetectorOnAncestors(part)
+	local current = part
+	while current and current ~= workspace do
+		for _, child in ipairs(current:GetChildren()) do
+			if child:IsA("ClickDetector") then
+				return child
+			end
+		end
+		current = current.Parent
+	end
+	return nil
+end
+
+-- Project mouse onto plane at Y = dragPlaneY
+local function getMouseHitOnPlane()
+	local rayOrigin = workspace.CurrentCamera.CFrame.Position
+	local rayDirection = (mouse.Hit.Position - rayOrigin).Unit * 1000
+
+	local planeNormal = Vector3.new(0,1,0)
+	local planePoint = Vector3.new(0, dragPlaneY, 0)
+
+	local denom = rayDirection:Dot(planeNormal)
+	if math.abs(denom) > 0.0001 then
+		local t = (planePoint - rayOrigin):Dot(planeNormal) / denom
+		if t >= 0 then
+			return rayOrigin + rayDirection * t
+		end
+	end
+	return nil
+end
+
+mouse.Button1Down:Connect(function()
+	local target = mouse.Target
+	if not target then return end
+	local cd = findClickDetectorOnAncestors(target)
+	if not cd then return end
+
+	dragInstance = cd.Parent
+	local root = getRoot(dragInstance)
+	if not root then return end
+
+	-- Flat plane height at start Y
+	dragPlaneY = root.Position.Y
+
+	local hitPos = getMouseHitOnPlane()
+	if hitPos then
+		dragOffset = root.CFrame:ToObjectSpace(CFrame.new(hitPos))
+	end
+
+	dragging = true
+end)
+
+RunService.RenderStepped:Connect(function()
+	if dragging and dragInstance then
+		local root = getRoot(dragInstance)
+		local hitPos = getMouseHitOnPlane()
+		if root and hitPos then
+			local newCFrame = CFrame.new(hitPos) * dragOffset
+			if dragInstance:IsA("Model") and dragInstance.PrimaryPart then
+				dragInstance:SetPrimaryPartCFrame(newCFrame)
+			elseif root:IsA("BasePart") then
+				root.CFrame = newCFrame
+			end
+		end
+	end
+end)
+
+mouse.Button1Up:Connect(function()
+	dragging = false
+	dragInstance = nil
+end)
